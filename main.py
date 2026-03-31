@@ -10,6 +10,7 @@ from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from leave_logic import DEFAULT_ALLOWED_CODES, analyze
 from weekly_hours import analyze_week, parse_iso_week_anchor, sunday_of_week_containing
@@ -18,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app = FastAPI(title="Leave buckets", version="0.1.0")
+# Railway (and other reverse proxies) send X-Forwarded-*; trust them for correct URLs/scheme.
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
