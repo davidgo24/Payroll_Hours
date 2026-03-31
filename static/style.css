@@ -1,0 +1,751 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 64rem;
+  padding: 1.25rem 1rem 3rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f4f4f5;
+}
+
+.header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 650;
+}
+
+.muted {
+  color: #52525b;
+}
+
+.hint {
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+code {
+  font-size: 0.9em;
+  background: #e4e4e7;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.allowlist h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.codes {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.form .field {
+  margin-bottom: 1rem;
+}
+
+.form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.form input[type="file"] {
+  max-width: 100%;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #1d4ed8;
+}
+
+.error {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.summary {
+  margin: 0 0 1rem;
+}
+
+.summary-extras__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.summary-extras__line {
+  margin: 0 0 0.5rem;
+}
+
+.summary-extras__line--last {
+  margin-bottom: 0;
+}
+
+.summary-extras-details {
+  padding: 0;
+}
+
+.summary-extras-details__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary-extras-details__summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-extras-details__summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid #71717a;
+  border-bottom: 2px solid #71717a;
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.summary-extras-details[open] .summary-extras-details__summary::before {
+  transform: rotate(45deg);
+  margin-top: 0.1rem;
+}
+
+.summary-extras-details__h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.summary-extras-details__peek {
+  font-size: 0.9rem;
+}
+
+.summary-extras-details__body {
+  padding: 0 1.25rem 1rem;
+  border-top: 1px solid #e4e4e7;
+}
+
+.bucket--collapsible {
+  padding: 0;
+}
+
+.bucket-details__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bucket-details__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bucket-details__summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid #71717a;
+  border-bottom: 2px solid #71717a;
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+  align-self: center;
+  transition: transform 0.15s ease;
+}
+
+.bucket--collapsible[open] .bucket-details__summary::before {
+  transform: rotate(45deg);
+  margin-top: 0.1rem;
+}
+
+.bucket-details__h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  flex: 1;
+  min-width: 0;
+}
+
+.bucket-details__peek {
+  font-size: 0.9rem;
+}
+
+.bucket-details__body {
+  padding: 0 1.25rem 1rem;
+  border-top: 1px solid #e4e4e7;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.short-summary-scroll {
+  margin: 0.5rem 0 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.short-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.short-summary-table th,
+.short-summary-table td {
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.short-summary-table thead th {
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #52525b;
+  background: #fafafa;
+}
+
+.short-summary-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.short-summary-table__emp a {
+  font-weight: 600;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.short-summary-table__emp a:hover {
+  text-decoration: underline;
+}
+
+.short-summary-table__banks {
+  vertical-align: middle;
+}
+
+.bank-chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 0.15rem 0.35rem 0.15rem 0;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: #1e3a5f;
+  background: #e0f2fe;
+  border: 1px solid #7dd3fc;
+  border-radius: 999px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.filter-bar__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid #d4d4d8;
+  border-radius: 999px;
+  background: #fff;
+  color: #3f3f46;
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: #a1a1aa;
+}
+
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chip--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.emp-wrap {
+  margin-bottom: 0.75rem;
+  scroll-margin-top: 1rem;
+}
+
+.emp-wrap:last-child {
+  margin-bottom: 0;
+}
+
+.emp-accordion {
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.emp-accordion__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 650;
+  list-style: none;
+}
+
+.emp-accordion__summary::-webkit-details-marker {
+  display: none;
+}
+
+.emp-accordion__summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid #71717a;
+  border-bottom: 2px solid #71717a;
+  transform: rotate(-45deg);
+  margin-right: 0.35rem;
+  transition: transform 0.15s ease;
+}
+
+.emp-accordion[open] .emp-accordion__summary::before {
+  transform: rotate(45deg);
+  margin-top: 0.15rem;
+}
+
+.emp-accordion__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.emp-accordion__body {
+  padding: 0 1rem 1rem;
+  background: #fff;
+  border-radius: 0 0 9px 9px;
+}
+
+.card--nested {
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.unmapped-inline__list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+}
+
+.warnings h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.warnings ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* Single column: "Used leave" and "Did not use leave" each get full content width.
+   A two-column page grid made each bucket half-width and invited overlap with bank UI. */
+.grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bucket {
+  min-width: 0;
+}
+
+.bucket h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 0.5rem;
+}
+
+.emp-block {
+  margin-bottom: 1.5rem;
+}
+
+.emp-block:last-child {
+  margin-bottom: 0;
+}
+
+/* Flex column avoids grid placement quirks; leave panel always above bank stack. */
+.emp-block--split {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  width: 100%;
+}
+
+.leave-panel {
+  width: 100%;
+  display: block;
+}
+
+.bank-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  overflow-x: auto;
+}
+
+.bank-card--recon {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.bank-card--truth {
+  border-style: solid;
+}
+
+.bank-card--debits {
+  border-style: dashed;
+}
+
+.recon-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.recon-table th,
+.recon-table td {
+  padding: 0.35rem 0.4rem;
+}
+
+.recon-table th.num,
+.recon-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.badge--ok {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.badge--short {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.badge--missing {
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+.unpaid-line {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.emp-block__main {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  flex: 0 0 auto;
+  overflow-x: auto;
+}
+
+.bank-hint {
+  margin: 0 0 1rem;
+}
+
+.bank-card {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.bank-card__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.bank-table {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.bank-table th {
+  font-weight: 500;
+  background: transparent;
+  padding-right: 0.75rem;
+  vertical-align: top;
+}
+
+.bank-table td.bank-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bank-missing {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.emp-id {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+th {
+  font-weight: 600;
+  color: #3f3f46;
+  background: #fafafa;
+}
+
+tfoot .total-row td {
+  border-top: 2px solid #d4d4d8;
+  padding-top: 0.5rem;
+  font-weight: 650;
+}
+
+tfoot .total-hours {
+  font-variant-numeric: tabular-nums;
+}
+
+.id-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  columns: 2;
+  column-gap: 1.5rem;
+}
+
+.id-list li {
+  break-inside: avoid;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* --- Weekly hours page --- */
+
+.nav-top {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.nav-top a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.nav-top a:hover {
+  text-decoration: underline;
+}
+
+.weekly-summary {
+  margin-bottom: 1rem;
+}
+
+.weekly-excluded {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.weekly-section {
+  margin-bottom: 1.25rem;
+}
+
+.weekly-section__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.weekly-emp {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.weekly-emp:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.weekly-emp__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.weekly-emp__totals {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.week-day-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.week-day-strip__cell {
+  min-width: 3.25rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fafafa;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.week-day-strip__cell--empty {
+  opacity: 0.55;
+  background: #fff;
+}
+
+.week-day-strip__label {
+  display: block;
+  font-weight: 650;
+  font-size: 0.7rem;
+  color: #52525b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.week-day-strip__hrs {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.week-day-strip__dash {
+  color: #a1a1aa;
+}
+
+.weekly-lines {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.weekly-lines th,
+.weekly-lines td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.weekly-lines__ot td {
+  background: #fffbeb;
+}
+
+.weekly-badge {
+  font-size: 0.68rem;
+  font-weight: 650;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.weekly-badge--reg {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.weekly-badge--ot {
+  background: #fef3c7;
+  color: #92400e;
+}

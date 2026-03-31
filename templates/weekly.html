@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly hours</title>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}?v=8" />
+</head>
+<body>
+  <header class="header">
+    <p class="nav-top muted"><a href="/">Leave buckets</a> · <strong>Weekly hours</strong></p>
+    <h1>Weekly hours (Sun–Sat)</h1>
+    <p class="muted">
+      Upload the same <strong>hours CSV</strong> and <strong>roster</strong> as the main tool. Pick any day in the week (the week runs <strong>Sunday through Saturday</strong>). Dates in the CSV can be <code>M/D/YYYY</code> or <code>YYYY-MM-DD</code>.
+      <strong>Reg</strong> = all pay codes except OT 1.5, OT 1.0, CT EARN 1.5, CT EARN 1.0 (matched case-insensitively). <strong>Optional bank</strong> file is used to exclude employees who are short on accrual for that week&rsquo;s leave debits.
+    </p>
+  </header>
+
+  {% if error %}
+  <p class="error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <form class="card form" method="post" action="/weekly-hours" enctype="multipart/form-data">
+    <div class="field">
+      <label for="week_start">Week (pick any day &mdash; week is Sun&ndash;Sat)</label>
+      <input id="week_start" name="week_start" type="date" value="{{ default_week }}" required />
+    </div>
+    <div class="field">
+      <label for="hours_w">Hours CSV</label>
+      <input id="hours_w" name="hours" type="file" accept=".csv,text/csv" required />
+    </div>
+    <div class="field">
+      <label for="roster_w">Employee IDs</label>
+      <input id="roster_w" name="roster" type="file" accept=".csv,.txt,text/plain" required />
+    </div>
+    <div class="field">
+      <label for="bank_w">Leave bank (optional)</label>
+      <input id="bank_w" name="bank" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+    </div>
+    <p class="hint muted">Allowlist for &ldquo;leave&rdquo; is the same as the main page: {{ allowed_codes | join(", ") }}</p>
+    <button type="submit" class="btn">Analyze week</button>
+  </form>
+
+  {% if result %}
+  <section class="results weekly-results">
+    <p class="summary weekly-summary">
+      <strong>{{ result.week_label }}</strong>
+      ({{ result.week_start }} to {{ result.week_end }})
+      {% if result.bank_uploaded %}
+      <span class="muted">· Bank file uploaded</span>
+      {% else %}
+      <span class="muted">· No bank file — short balances not checked</span>
+      {% endif %}
+    </p>
+    <p class="hint muted">
+      <strong>{{ result.matched_week_row_count }}</strong> CSV row(s) dated in this week
+      ({{ result.total_hours_rows }} row(s) in file after parse).
+    </p>
+    {% if result.total_hours_rows and result.matched_week_row_count == 0 %}
+    <p class="error" role="status">
+      <strong>No hours fell in this week.</strong> Either change the week above, or fix dates in your CSV.
+      Supported date formats: <code>M/D/YYYY</code> and <code>YYYY-MM-DD</code>.
+      Selected range: {{ result.week_start }} through {{ result.week_end }}.
+    </p>
+    {% endif %}
+    {% if result.excluded_note %}
+    <p class="weekly-excluded muted">Not listed below: {{ result.excluded_note }}.</p>
+    {% endif %}
+
+    {% if result.warnings %}
+    <div class="card warnings">
+      <h2>Parse warnings</h2>
+      <ul>
+        {% for w in result.warnings %}
+        <li>{{ w }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div class="card weekly-section">
+      <h2 class="weekly-section__title">Balance OK (no unmapped codes{% if result.bank_uploaded %}; not short on bank{% endif %})</h2>
+      <p class="hint muted">Used leave this week, mapped pay codes, and{% if result.bank_uploaded %} balances cover debits{% else %} no unmapped codes only (upload bank to verify short){% endif %}.</p>
+      {% if result.section_balance_ok %}
+        {% for block in result.section_balance_ok %}
+        <article class="weekly-emp" id="wemp-{{ block.employee_id }}">
+          <h3 class="weekly-emp__title">Employee {{ block.employee_id }}</h3>
+          <p class="weekly-emp__totals">
+            Total <strong>{{ block.total_hours }}</strong> —
+            Reg <strong>{{ block.reg_hours }}</strong> —
+            OT <strong>{{ block.ot_hours }}</strong>
+          </p>
+          <div class="week-day-strip" role="group" aria-label="Hours by day">
+            {% for d in block.day_strip %}
+            <div class="week-day-strip__cell{% if not d.has_hours %} week-day-strip__cell--empty{% endif %}">
+              <span class="week-day-strip__label">{{ d.label }}</span>
+              {% if d.has_hours %}<span class="week-day-strip__hrs">{{ d.hours_str }}</span>{% else %}<span class="week-day-strip__dash">&mdash;</span>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% if block.line_rows %}
+          <table class="weekly-lines">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Hours</th>
+                <th>Pay code</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in block.line_rows %}
+              <tr class="weekly-lines__{{ row.bucket }}">
+                <td>{{ row.date }}</td>
+                <td>{{ row.hours }}</td>
+                <td>{{ row.pay_code }}</td>
+                <td><span class="weekly-badge weekly-badge--{{ row.bucket }}">{{ row.bucket | upper }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="muted">No hours in this week for this employee.</p>
+          {% endif %}
+        </article>
+        {% endfor %}
+      {% else %}
+        <p class="muted">No employees in this group for the selected week.</p>
+      {% endif %}
+    </div>
+
+    <div class="card weekly-section">
+      <h2 class="weekly-section__title">Did not use leave this week</h2>
+      <p class="hint muted">No non-allowlist pay codes in the hours file for this Sun&ndash;Sat window.</p>
+      {% if result.section_no_leave %}
+        {% for block in result.section_no_leave %}
+        <article class="weekly-emp weekly-emp--compact" id="wemp-{{ block.employee_id }}">
+          <h3 class="weekly-emp__title">Employee {{ block.employee_id }}</h3>
+          <p class="weekly-emp__totals">
+            Total <strong>{{ block.total_hours }}</strong> —
+            Reg <strong>{{ block.reg_hours }}</strong> —
+            OT <strong>{{ block.ot_hours }}</strong>
+          </p>
+          <div class="week-day-strip" role="group" aria-label="Hours by day">
+            {% for d in block.day_strip %}
+            <div class="week-day-strip__cell{% if not d.has_hours %} week-day-strip__cell--empty{% endif %}">
+              <span class="week-day-strip__label">{{ d.label }}</span>
+              {% if d.has_hours %}<span class="week-day-strip__hrs">{{ d.hours_str }}</span>{% else %}<span class="week-day-strip__dash">&mdash;</span>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% if block.line_rows %}
+          <table class="weekly-lines">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Hours</th>
+                <th>Pay code</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in block.line_rows %}
+              <tr class="weekly-lines__{{ row.bucket }}">
+                <td>{{ row.date }}</td>
+                <td>{{ row.hours }}</td>
+                <td>{{ row.pay_code }}</td>
+                <td><span class="weekly-badge weekly-badge--{{ row.bucket }}">{{ row.bucket | upper }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="muted">No hours in file for this week.</p>
+          {% endif %}
+        </article>
+        {% endfor %}
+      {% else %}
+        <p class="muted">No employees in this group.</p>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <footer class="footer muted">
+    <small>Payroll data — keep this deployment private.</small>
+  </footer>
+</body>
+</html>

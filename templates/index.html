@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leave buckets</title>
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}?v=8" />
+</head>
+<body>
+  <header class="header">
+    <p class="nav-top muted"><strong>Leave buckets</strong> · <a href="/weekly-hours">Weekly hours</a></p>
+    <h1>Leave buckets</h1>
+    <p class="muted">
+      Upload weekly <strong>hours CSV</strong> (no header: employee id, hours, pay code, date) and your
+      <strong>managed employee ID list</strong> (one id per line). Any pay code <em>not</em> in the allowlist below is treated as leave.
+    </p>
+  </header>
+
+  <section class="allowlist card">
+    <h2>Allowlist (not counted as leave)</h2>
+    <p class="codes">{{ allowed_codes | join(", ") }}</p>
+    <p class="hint muted">
+      Override on Railway with env <code>ALLOWED_CODES</code> (comma-separated). Example: add <code>CT PAY 1.0</code> if comp-time payout should not flag leave.
+    </p>
+  </section>
+
+  {% if error %}
+  <p class="error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <form class="card form" method="post" action="/" enctype="multipart/form-data">
+    <div class="field">
+      <label for="hours">Hours CSV</label>
+      <input id="hours" name="hours" type="file" accept=".csv,text/csv" required />
+    </div>
+    <div class="field">
+      <label for="roster">Employee IDs</label>
+      <input id="roster" name="roster" type="file" accept=".csv,.txt,text/plain" required />
+    </div>
+    <div class="field">
+      <label for="bank">Leave bank (optional)</label>
+      <input id="bank" name="bank" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+    </div>
+    <p class="hint muted bank-hint">Accrual balance export (.xlsx). With a bank file, balances and reconciliation appear beside each employee who used leave.</p>
+    <button type="submit" class="btn">Analyze</button>
+  </form>
+
+  {% if result %}
+  <section class="results">
+    <p class="summary">
+      <strong>{{ result.roster_count }}</strong> employees in roster —
+      <strong>{{ result.used_leave | length }}</strong> used leave,
+      <strong>{{ result.no_leave | length }}</strong> did not use leave.
+    </p>
+
+    {% if result.warnings %}
+    <div class="card warnings">
+      <h2>Parse warnings</h2>
+      <ul>
+        {% for w in result.warnings %}
+        <li>{{ w }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if result.used_leave %}
+    <details class="card summary-extras summary-extras-details">
+      <summary class="summary-extras-details__summary">
+        <h2 class="summary-extras-details__h2">Balance checks</h2>
+        {% if result.bank_uploaded %}
+        <span class="summary-extras-details__peek muted">
+          <strong>{{ result.summary.short_count }}</strong> short on bank
+          · <strong>{{ result.summary.unmapped_employee_count }}</strong> unmapped
+        </span>
+        {% else %}
+        <span class="summary-extras-details__peek muted">
+          Upload bank to reconcile · <strong>{{ result.summary.unmapped_employee_count }}</strong> unmapped
+        </span>
+        {% endif %}
+      </summary>
+      <div class="summary-extras-details__body">
+        {% if result.bank_uploaded %}
+        <p class="summary-extras__line">
+          <strong>{{ result.summary.short_count }}</strong> employee{% if result.summary.short_count != 1 %}s{% endif %} short on at least one bank
+          {% if result.summary.short_count == 0 %}<span class="muted">(none)</span>{% endif %}
+        </p>
+        {% if result.summary.short_employees %}
+        <div class="short-summary-scroll" role="region" aria-label="Employees short on balance">
+          <table class="short-summary-table">
+            <caption class="visually-hidden">Employees with debit greater than imported balance for at least one bank</caption>
+            <thead>
+              <tr>
+                <th scope="col">Employee</th>
+                <th scope="col">Short on bank(s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for se in result.summary.short_employees %}
+              <tr>
+                <td class="short-summary-table__emp">
+                  <a href="#emp-{{ se.employee_id }}">Employee {{ se.employee_id }}</a>
+                </td>
+                <td class="short-summary-table__banks">
+                  {% for chip in se.banks_short_chips %}
+                  <span class="bank-chip" title="{{ chip.label }}">{{ chip.key }}</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="muted">Upload a leave bank file to compare debits to balances and list employees who are short.</p>
+        {% endif %}
+        <p class="summary-extras__line summary-extras__line--last">
+          <strong>{{ result.summary.unmapped_employee_count }}</strong> employee{% if result.summary.unmapped_employee_count != 1 %}s{% endif %} with unmapped pay codes (see accordions)
+        </p>
+      </div>
+    </details>
+
+    <div class="filter-bar card" role="group" aria-label="Filter employees">
+      <span class="filter-bar__label">Show:</span>
+      <div class="filter-chips">
+        <button type="button" class="chip chip--active" data-filter="all">All</button>
+        <button type="button" class="chip" data-filter="short" {% if not result.bank_uploaded %}disabled title="Requires bank file"{% endif %}>Short only</button>
+        <button type="button" class="chip" data-filter="warnings">Has warnings</button>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="grid">
+      <div class="card bucket">
+        <h2>Used leave</h2>
+        {% if result.used_leave %}
+          {% for block in result.used_leave %}
+          <div
+            class="emp-wrap"
+            id="emp-{{ block.employee_id }}"
+            data-short="{{ 'true' if block.has_short else 'false' }}"
+            data-warnings="{{ 'true' if block.has_unmapped else 'false' }}"
+          >
+            <details class="emp-accordion">
+              <summary class="emp-accordion__summary">
+                <span class="emp-accordion__title">Employee {{ block.employee_id }}</span>
+                {% if block.has_short %}<span class="badge badge--short">Short</span>{% endif %}
+                {% if block.has_unmapped %}<span class="badge badge--missing">Unmapped</span>{% endif %}
+              </summary>
+              <div class="emp-accordion__body emp-block emp-block--split">
+            <section class="emp-block__main leave-panel" aria-label="Leave line items">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Hours</th>
+                  <th>Pay code</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in block.rows %}
+                <tr>
+                  <td>{{ row.date }}</td>
+                  <td>{{ row.hours }}</td>
+                  <td>{{ row.pay_code }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td>Total leave</td>
+                  <td class="total-hours">{{ block.total_hours }}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+            </section>
+            {% if block.ledger.unmapped_notes %}
+            <div class="unmapped-inline card card--nested">
+              <strong>Unmapped pay codes</strong>
+              <ul class="unmapped-inline__list">
+                {% for note in block.ledger.unmapped_notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+            <div class="bank-stack" aria-label="Bank and ledger">
+            {% if result.bank_uploaded %}
+              {% if block.bank.found %}
+              <aside class="bank-card bank-card--truth">
+                <h4 class="bank-card__title">Balances (import)</h4>
+                <table class="bank-table">
+                  <tbody>
+                    {% for col in block.bank.columns %}
+                    <tr>
+                      <th scope="row">{{ col.label }}</th>
+                      <td class="bank-val">{{ col.value }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </aside>
+              {% else %}
+              <aside class="bank-card bank-card--truth">
+                <h4 class="bank-card__title">Balances (import)</h4>
+                <p class="muted bank-missing">{{ block.bank.message }}</p>
+              </aside>
+              {% endif %}
+            {% endif %}
+
+              <aside class="bank-card bank-card--debits">
+                <h4 class="bank-card__title">Debits (this period)</h4>
+                {% if block.period_debits.columns %}
+                <table class="bank-table">
+                  <tbody>
+                    {% for col in block.period_debits.columns %}
+                    <tr>
+                      <th scope="row">{{ col.label }}</th>
+                      <td class="bank-val">{{ col.debit }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% else %}
+                <p class="muted bank-missing">No hours mapped to accrual banks (unpaid, unmapped, or empty).</p>
+                {% endif %}
+              </aside>
+
+              {% if block.reconciliation and block.reconciliation.rows %}
+              <aside class="bank-card bank-card--recon">
+                <h4 class="bank-card__title">Balance vs debit</h4>
+                <table class="recon-table">
+                  <thead>
+                    <tr>
+                      <th>Bank</th>
+                      <th class="num">Balance</th>
+                      <th class="num">Debit</th>
+                      <th class="num">Remaining</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for rr in block.reconciliation.rows %}
+                    <tr class="recon-row recon-row--{{ rr.status }}">
+                      <td>{{ rr.label }}</td>
+                      <td class="num">{{ rr.balance }}</td>
+                      <td class="num">{{ rr.debit }}</td>
+                      <td class="num">{{ rr.remaining }}</td>
+                      <td><span class="badge badge--{{ rr.status }}">{{ rr.status_label }}</span></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </aside>
+              {% endif %}
+
+              {% if block.ledger.unpaid_hours_str != "0.00" %}
+              <p class="unpaid-line">Unpaid (LWOP, etc.): <strong>{{ block.ledger.unpaid_hours_str }}</strong> hrs</p>
+              {% endif %}
+            </div>
+              </div>
+            </details>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="muted">No employees in this roster had non-allowlist codes.</p>
+        {% endif %}
+      </div>
+
+      <details class="card bucket bucket--collapsible">
+        <summary class="bucket-details__summary">
+          <h2 class="bucket-details__h2">Did not use leave</h2>
+          <span class="bucket-details__peek muted">{{ result.no_leave | length }} in roster</span>
+        </summary>
+        <div class="bucket-details__body">
+          {% if result.no_leave %}
+          <ul class="id-list">
+            {% for eid in result.no_leave %}
+            <li>{{ eid }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+            <p class="muted">Everyone in the roster had at least one leave row.</p>
+          {% endif %}
+        </div>
+      </details>
+    </div>
+  </section>
+  {% endif %}
+
+  <footer class="footer muted">
+    <small>Payroll data — keep this deployment private.</small>
+  </footer>
+
+  {% if result and result.used_leave %}
+  <script>
+  (function () {
+    var chips = document.querySelectorAll(".filter-chips [data-filter]");
+    var wraps = document.querySelectorAll(".emp-wrap");
+    chips.forEach(function (ch) {
+      ch.addEventListener("click", function () {
+        if (ch.disabled) return;
+        var f = ch.getAttribute("data-filter");
+        chips.forEach(function (c) {
+          c.classList.toggle("chip--active", c === ch);
+        });
+        wraps.forEach(function (w) {
+          var short = w.getAttribute("data-short") === "true";
+          var warn = w.getAttribute("data-warnings") === "true";
+          var show = true;
+          if (f === "short") show = short;
+          else if (f === "warnings") show = warn;
+          w.hidden = !show;
+        });
+      });
+    });
+
+    function openEmpFromHash() {
+      var hash = location.hash;
+      if (!hash || hash.indexOf("#emp-") !== 0) return;
+      var wrap = document.querySelector(hash);
+      if (!wrap) return;
+      var det = wrap.querySelector("details.emp-accordion");
+      if (det) det.open = true;
+      wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    window.addEventListener("hashchange", openEmpFromHash);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", openEmpFromHash);
+    } else {
+      openEmpFromHash();
+    }
+  })();
+  </script>
+  {% endif %}
+</body>
+</html>
