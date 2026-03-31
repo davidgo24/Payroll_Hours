@@ -39,7 +39,8 @@ Override with environment variable `ALLOWED_CODES` (comma-separated), e.g. `REG 
 ## Railway (GitHub)
 
 1. Push this repo to GitHub and connect it in [Railway](https://railway.app).
-2. Railway sets `PORT`; the included `Procfile` starts Gunicorn with uvicorn workers.
-3. If the dashboard asks for a start command, use:  
-   `gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:$PORT --workers 2`
-4. Keep the service private; payroll uploads are sensitive.
+2. Railway sets `PORT`. The repo includes [`railway.json`](railway.json) with an explicit **`startCommand`** so the app actually listens (Railpack often ignores `Procfile`, which can make the site never come up).
+3. In the service: **Settings → Networking → Generate domain** (or attach a custom domain) so the app is reachable; without a public URL you will not see the UI.
+4. Optional dashboard start command (same as `railway.json`):  
+   `gunicorn -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:$PORT --workers 1`
+5. Keep the service private; payroll uploads are sensitive.
